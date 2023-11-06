@@ -1,16 +1,14 @@
 DEBUG_FLAGS = -g -DDEBUG
-CFLAGS = -lm -lpthread -O3
+CFLAGS = -lm -lpthread -O3 -lmpi
+CC = mpic++
 
 .PHONY : all debug clean purge
 
 all : findKNN
 
-findKNN: max-heap.o chrono.o findKLeast.o
+findKNN: max-heap.o chrono.o
 	gcc -o $@ $^ $(CFLAGS)
 
-
-findKLeast: max-heap.o chrono.o findKLeast.o
-	gcc $(CFLAGS) -c $^
 
 max-heap.o : max-heap.c
 	gcc $(CFLAGS) -c $^
