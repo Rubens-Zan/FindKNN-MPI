@@ -9,11 +9,7 @@ typedef struct {
     float coords[300]; // Número fixo de dimensões para simplificar
 } Point;
 
-// Estrutura para manter o índice do ponto e a distância
-typedef struct {
-    float distance;
-    int index;
-} Neighbor;
+
 
 // Função para gerar pontos aleatórios
 void generate_random_points(Point *points, int n_points, int dimensions) {
@@ -49,6 +45,8 @@ int main(int argc, char *argv[]) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     Point *P = NULL;
+    Point *Q = NULL;
+
     Point *local_Q = NULL; // Cada processo terá um subconjunto de Q para processar
     int *result_indices = NULL; // Esta matriz armazenará os índices dos k vizinhos mais próximos
 
@@ -56,6 +54,7 @@ int main(int argc, char *argv[]) {
     if (rank == 0) {
         // Alocação de memória
         P = (Point *)malloc(n * sizeof(Point));
+        Q = (Point *)malloc(nq * sizeof(Point));
         local_Q = (Point *)malloc(nq * sizeof(Point)); // local_Q é todo Q no processo 0
         result_indices = (int *)malloc(nq * k * sizeof(int));
 
@@ -138,15 +137,15 @@ int main(int argc, char *argv[]) {
 
 // Execução do KNN no subconjunto de Q para cada processo
 void knn(Point *local_Q, int local_nq, Point *P, int n, int D, int k, int *result_indices) {
-    Neighbor *neighbors = (Neighbor *)malloc(n * sizeof(Neighbor));
+    pair_t *neighbors = (pair_t *)malloc(n * sizeof(pair_t));
     
     for (int i = 0; i < local_nq; i++) {
         Point query_point = local_Q[i];
 
         // Calcula a distância de cada ponto em P até o ponto de consulta
         for (int j = 0; j < n; j++) {
-            neighbors[j].index = j;
-            neighbors[j].distance = euclidean_distance(&query_point, &P[j], D);
+            neighbors[j].val = j;
+            neighbors[j].key = euclidean_distance(&query_point, &P[j], D);
             
             // Ordena os vizinhos pela distância
             decreaseMax((pair_t *) neighbors, j,neighbors[j]); //  
@@ -157,7 +156,7 @@ void knn(Point *local_Q, int local_nq, Point *P, int n, int D, int k, int *resul
 
         // Armazena os índices dos k vizinhos mais próximos
         for (int m = 0; m < k; m++) {
-            result_indices[i * k + m] = neighbors[m].index;
+            result_indices[i * k + m] = neighbors[m].val;
         }
     }
 

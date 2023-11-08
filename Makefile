@@ -1,5 +1,5 @@
 DEBUG_FLAGS = -g -DDEBUG
-CFLAGS = -lm -lpthread -O3 -lmpi
+CFLAGS = -lmpi -O3
 CC = mpic++
 
 .PHONY : all debug clean purge
@@ -7,7 +7,7 @@ CC = mpic++
 all : findKNN
 
 findKNN: max-heap.o chrono.o
-	gcc -o $@ $^ $(CFLAGS)
+	$(CC)  $^ $(CFLAGS) -o $@
 
 
 max-heap.o : max-heap.c
@@ -23,4 +23,4 @@ clean :
 	$(RM) *.o
 
 purge : clean
-	$(RM) findKLeast 
+	$(RM) findKNN 
