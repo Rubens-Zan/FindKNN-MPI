@@ -29,5 +29,8 @@ max-heap.o: max-heap.h
 clean:
 	rm -f $(EXECUTABLE) $(OBJECTS)
 
+purge:
+	rm -f $(EXECUTABLE) $(OBJECTS)
+
 # Evita conflito com arquivos de mesmo nome que as regras
-.PHONY: all clean
+.PHONY: all clean purge
