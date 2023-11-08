@@ -1,26 +1,33 @@
-DEBUG_FLAGS = -g -DDEBUG
-CFLAGS = -lmpi -O3
-CC = mpic++
+# Variáveis para os compiladores e opções de compilação
+CC=mpicc
+CFLAGS=-Wall -O3
+LDFLAGS=-lm
 
-.PHONY : all debug clean purge
+# Nome do executável
+EXECUTABLE=findKNN
 
-all : findKNN
+# Arquivos de objeto
+OBJECTS=chrono.o findKNN.o max-heap.o
 
-findKNN: max-heap.o chrono.o
-	$(CC)  $^ $(CFLAGS) -o $@
+# Regra padrão
+all: $(EXECUTABLE)
 
+# Regra para o executável
+$(EXECUTABLE): $(OBJECTS)
+	$(CC) $(OBJECTS) -o $@ $(LDFLAGS)
 
-max-heap.o : max-heap.c
-	gcc $(CFLAGS) -c $^
+# Regra para arquivos objeto
+%.o: %.c
+	$(CC) -c $(CFLAGS) $< -o $@
 
-chrono.o : chrono.c
-	gcc $(CFLAGS) -c $^
-	
-debug : CFLAGS += $(DEBUG_FLAGS)
-debug : all
+# Inclui dependências de arquivos de cabeçalho
+chrono.o: chrono.h
+findKNN.o: findKNN.h max-heap.h
+max-heap.o: max-heap.h
 
-clean :
-	$(RM) *.o
+# Regra para limpar os arquivos compilados
+clean:
+	rm -f $(EXECUTABLE) $(OBJECTS)
 
-purge : clean
-	$(RM) findKNN 
+# Evita conflito com arquivos de mesmo nome que as regras
+.PHONY: all clean
