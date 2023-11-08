@@ -71,7 +71,9 @@ int main(int argc, char *argv[]) {
 
     Point *P = NULL;
     Point *Q = NULL;
-
+    // P = Pontos da base (dataset) (matriz de floats)
+    // Q = Pontos de consulta, send |Q| o tamanho de Q. (matriz de floats)
+    
     Point *local_Q = NULL; // Cada processo terá um subconjunto de Q para processar
     int *result_indices = NULL; // Esta matriz armazenará os índices dos k vizinhos mais próximos
 
@@ -145,8 +147,8 @@ int main(int argc, char *argv[]) {
         for( int linha=0; linha<nq; linha++ ) {
             printf( "knn[%d]: ", linha );
             for( int coluna=0; coluna<k; coluna++ )
-            printf( "%d ", result_indices[ linha*k+coluna ] );
-            printf( "\n" );
+                printf( "%d ", result_indices[ linha*k+coluna ] );
+                printf( "\n" );
         }
     }
     // ...
