@@ -4,10 +4,10 @@ CFLAGS=-Wall -O3
 LDFLAGS=-lm
 
 # Nome do executável
-EXECUTABLE=findKNN
+EXECUTABLE=knn-mpi
 
 # Arquivos de objeto
-OBJECTS=chrono.o findKNN.o max-heap.o
+OBJECTS=chrono.o knn-mpi.o max-heap.o
 
 # Regra padrão
 all: $(EXECUTABLE)
@@ -22,7 +22,7 @@ $(EXECUTABLE): $(OBJECTS)
 
 # Inclui dependências de arquivos de cabeçalho
 chrono.o: chrono.h
-findKNN.o: findKNN.h max-heap.h
+knn-mpi.o: knn-mpi.h max-heap.h
 max-heap.o: max-heap.h
 
 # Regra para limpar os arquivos compilados

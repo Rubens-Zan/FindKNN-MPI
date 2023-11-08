@@ -6,7 +6,7 @@
 
 // Definição da estrutura para um ponto com D dimensões
 typedef struct {
-    float coords[300]; // Número fixo de dimensões para simplificar
+    float coords[400000]; // Número fixo de dimensões para simplificar
 } Point;
 
 
@@ -33,12 +33,37 @@ float euclidean_distance(const Point *a, const Point *b, int dimensions) {
 // Protótipo da função KNN (a ser implementada)
 void knn(Point *Q, int nq, Point *P, int n, int D, int k, int *result_indices);
 
+void verificaKNN( float *Q, int nq, float *P, int n, int D, int k, int *R ) {
+    // note que R tem nq linhas por k colunas, para qualquer tamanho de k (colunas)
+    // entao é linearizado para acesso como um VETOR
+    printf( " ------------ VERIFICA KNN --------------- " );
+    for( int linha=0; linha<nq; linha++ ) {
+        printf( "knn[%d]: ", linha );
+        for( int coluna=0; coluna<k; coluna++ )
+            printf( "%d ", R[ linha*k+coluna ] );
+            printf( "\n" );
+    }
+}
+
 int main(int argc, char *argv[]) {
     int rank, size;
-    const int n = 400000; // Total de pontos em P
-    const int nq = 128;   // Total de pontos em Q
-    const int D = 300;    // Número de dimensões dos pontos
-    const int k = 5;      // Número de vizinhos mais próximos
+        
+    int n = 400000; // Total de pontos em P
+    int nq = 128;   // Total de pontos em Q
+    int D = 300;    // Número de dimensões dos pontos
+    int k = 5;      // Número de vizinhos mais próximos
+
+    if( argc != 5 ) {
+            printf( "usage: %s <nq> <npp> <d> <k>\n" ,
+                argv[0] ); 
+        return 0;
+    } else {
+        nq = atoi( argv[1] ); 
+        n = atoi( argv[2] ); 
+        D = atoi( argv[3] );
+        k = atoi( argv[4] );
+    }
+
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -114,6 +139,15 @@ int main(int argc, char *argv[]) {
         printf("sou o 0 \n");
         // Aqui, result_indices contém os resultados de todos os processos
         // Processamento adicional ou saída dos resultados pode ser feito aqui
+
+        
+
+        for( int linha=0; linha<nq; linha++ ) {
+            printf( "knn[%d]: ", linha );
+            for( int coluna=0; coluna<k; coluna++ )
+            printf( "%d ", result_indices[ linha*k+coluna ] );
+            printf( "\n" );
+        }
     }
     // ...
 
