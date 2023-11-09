@@ -2,6 +2,7 @@
 CC=mpicc
 CFLAGS=-Wall -O3
 LDFLAGS=-lm
+DEBUG_FLAGS = -g -DDEBUG
 
 # Nome do executável
 EXECUTABLE=knn-mpi
@@ -14,7 +15,7 @@ all: $(EXECUTABLE)
 
 # Regra para o executável
 $(EXECUTABLE): $(OBJECTS)
-	$(CC) $(OBJECTS) -o $@ $(LDFLAGS)
+	$(CC) $(OBJECTS) $(CFLAGS) -o $@ $(LDFLAGS)
 
 # Regra para arquivos objeto
 %.o: %.c
@@ -24,6 +25,9 @@ $(EXECUTABLE): $(OBJECTS)
 chrono.o: chrono.h
 knn-mpi.o: knn-mpi.h max-heap.h
 max-heap.o: max-heap.h
+
+debug : CFLAGS += $(DEBUG_FLAGS)
+debug : all
 
 # Regra para limpar os arquivos compilados
 clean:
