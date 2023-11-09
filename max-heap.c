@@ -114,7 +114,7 @@ void decreaseMax(pair_t heap[], int size, pair_t new_value) {
     if( heap[0].key > new_value.key ) {
       heap[0] = new_value;
       #if SHOW_DECREASE_MAX_STEPS 
-        //  drawHeapTree( heap, size, 4 );
+         drawHeapTree( heap, size, 4 );
          printf( "    ~~~~~~~~~~~~~~~~~~~~~~~~~\n" );
       #endif
       maxHeapify(heap, size, 0);
