@@ -97,38 +97,73 @@ void generate_expected_results(Point *Q, int nq, Point *P, int n, int D, int k, 
 // Execução do KNN no subconjunto de Q para cada processo
 void knn(Point *local_Q, int local_nq, Point *P, int n, int D, int k, int *result_indices, int rank)
 {
-    pair_t *neighbors = (pair_t *)malloc(n * sizeof(pair_t));
+    int heapSize;
+    heapSize = 0;
+
+    pair_t neighbors[local_nq*k][k]; // VERIFICAR A ALOCACAO
+    int meuRank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &meuRank);
+
+    for (int i = 0; i < local_nq; i++)
+    {
+        Point query_point = local_Q[i]; // pega a linha de Q
+        // Calcula a distância de cada ponto em P até o ponto de consulta
+        for (int j =  0; j < k; j++) // insere as K primeiras distancias euclideanas
+        {
+            pair_t inputTuple; 
+
+            inputTuple.val = j;
+            inputTuple.key = euclidean_distance(&query_point, &P[j], D);
+            insert( (pair_t *)neighbors[i], &heapSize, inputTuple );     // SEGFAULT AQUI
+            
+        }
+    }
+
 
     for (int i = 0; i < local_nq; i++)
     {
         Point query_point = local_Q[i];
 
         // Calcula a distância de cada ponto em P até o ponto de consulta
-        for (int j = 0; j < n; j++)
+        for (int j =  k; j < n; j++)
         {
-            neighbors[j].val = j;
-            neighbors[j].key = euclidean_distance(&query_point, &P[j], D);
+            pair_t inputTuple; 
 
+            inputTuple.val = j;
+            inputTuple.key = euclidean_distance(&query_point, &P[j], D);
             // Ordena os vizinhos pela distância
-            decreaseMax((pair_t *)neighbors, j, neighbors[j]);
-        }
-        // Armazena os índices dos k vizinhos mais próximos
-        for (int m = 0; m < k; m++)
-        {
-            result_indices[i * k + m] = neighbors[m].val;
+            decreaseMax((pair_t *)neighbors[i], heapSize, inputTuple);
         }
     }
+    // Armazena os índices dos k vizinhos mais próximos
+    for (int i = 0; i < local_nq; i++){
+        if (meuRank == 0)
+            printf("\n Para a linha: %d \n",i); 
+        for (int j =  0; j < k; j++) // insere as K primeiras distancias euclideanas
+            if (meuRank == 0)
+                printf("(%d,%d) =  %f %d \n", i,j,neighbors[i][j].key,neighbors[i][j].val ); 
+    }
+    
 
-    free(neighbors);
 }
 
 int main(int argc, char *argv[])
 {
     int rank, size;
-    const int n = 20; // Total de pontos em P
-    const int nq = 8; // Total de pontos em Q
-    const int D = 10; // Número de dimensões dos pontos
-    const int k = 5;  // Número de vizinhos mais próximos
+    int nq = 8; // Total de pontos em Q
+    int n = 20; // Total de pontos em P
+    int D = 10; // Número de dimensões dos pontos
+    int k = 5;  // Número de vizinhos mais próximos
+    
+    if (argc != 5){
+        printf("Expected: mpirun -np 4 knn-mpi <nq> <npp> <d> <k> %d \n", argc);
+        exit(1); 
+    }
+
+    nq = atoi(argv[1]);
+    n  = atoi(argv[2]);
+    D = atoi(argv[3]);
+    k = atoi(argv[4]);
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -212,7 +247,7 @@ int main(int argc, char *argv[])
     {
         // Array 'expected_results' com os índices esperados
         // verify_results(result_indices, expected_results, nq * k);
-
+        #ifdef DEBUG 
         // Imprimir os resultados gerados pelo KNN
         printf("\nÍndices dos vizinhos mais próximos calculados pelo KNN:\n");
         for (int i = 0; i < nq; i++)
@@ -236,6 +271,7 @@ int main(int argc, char *argv[])
             }
             printf("\n");
         }
+        #endif
 
         printf("\nMatriz P:\n");
         for (int i = 0; i < n; i++)
