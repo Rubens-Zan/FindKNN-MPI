@@ -4,6 +4,7 @@
 #include <time.h>
 #include "mpi.h"
 #include "max-heap.h"
+#include "chrono.h"
 
 #define MAX_POINTS 300
 // Definição da estrutura para um ponto com D dimensões
@@ -50,12 +51,19 @@ void verify_results(int *computed_indices, int *expected_indices, int length)
     int incorrect_count = 0;
     for (int i = 0; i < length; i++)
     {
-        if (computed_indices[i] != expected_indices[i])
-        {
-            printf("Índice %d: calculado=%d, esperado=%d\n", i, computed_indices[i], expected_indices[i]);
+        int ok = 0;
+
+        for (int j = 0; j < length; j++){
+            if (computed_indices[i] == expected_indices[j])
+                ok =1;
+        }
+
+        if (!ok){
             incorrect_count++;
+            // printf("Índice %d: calculado=%d, esperado=%d\n", i, computed_indices[i], expected_indices[i]);
         }
     }
+
     if (incorrect_count == 0)
     {
         printf("Todos os resultados estão corretos.\n");
@@ -97,17 +105,14 @@ void generate_expected_results(Point *Q, int nq, Point *P, int n, int D, int k, 
 }
 
 // Execução do KNN no subconjunto de Q para cada processo
-void knn(Point *local_Q, int local_nq, Point *P, int n, int D, int k, int *result_indices, int rank)
+void knn(Point *local_Q, int local_nq, Point *P, int n, int D, int k, int *result_indices)
 {
-    pair_t buff[k];
-    pair_t neighbors[local_nq][k]; // VERIFICAR A ALOCACAO
-    
-
-    int meuRank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &meuRank);
+    pair_t neighbors[local_nq][k]; // matriz com nq linhas e k colunas
     pair_t inputTuple; 
     Point query_point;
 
+    // Em cada um dos buffers que esse processo MPI deve lidar
+    // insere K vizinhos para inicializar a heap
     for (int i = 0; i < local_nq; i++)
     {
         int heapSize = 0;
@@ -124,6 +129,7 @@ void knn(Point *local_Q, int local_nq, Point *P, int n, int D, int k, int *resul
 
     int heapSize = k;
 
+    // aplica decreaseMax para o restante dos elementos da matriz 
     for (int i = 0; i < local_nq; i++)
     {
         Point query_point = local_Q[i];
@@ -135,21 +141,15 @@ void knn(Point *local_Q, int local_nq, Point *P, int n, int D, int k, int *resul
 
             inputTuple.val = j;
             inputTuple.key = euclidean_distance(&query_point, &P[j], D);
-            // Ordena os vizinhos pela distância
-            decreaseMax((pair_t *)neighbors[i], heapSize, inputTuple);
+
+            decreaseMax((pair_t *)neighbors[i], heapSize, inputTuple); 
         }
     }
-    // Armazena os índices dos k vizinhos mais próximos
-    // if (meuRank == 0){
-        // for (int i = 0; i < local_nq; i++)
-            // drawHeapTree( neighbors[i], heapSize , k );
 
-    //     for (int i = 0; i < local_nq; i++){
-    //             printf("\n Para a linha: %d \n",i); 
-    //             for (int j =  0; j < k; j++) // insere as K primeiras distancias euclideanas
-    //                 printf("(%d,%d) =  %f %d \n", i,j,neighbors[i][j].key,neighbors[i][j].val );
-    // }
-    
+    // Armazena os índices dos k vizinhos mais próximos
+    for (int i = 0; i < local_nq; i++)
+        for (int m = 0; m < k; m++)
+            result_indices[i * k + m] = neighbors[i][m].val;
 
 }
 
@@ -174,6 +174,7 @@ int main(int argc, char *argv[])
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
+    chronometer_t chrono;
 
     Point *P = NULL;
     Point *Q = NULL;
@@ -196,15 +197,12 @@ int main(int argc, char *argv[])
         srand(42); // Fixed seed for reproducibility
         generate_random_points(P, n, D);
         generate_random_points(Q, nq, D);
+        
+        chrono_reset(&chrono);
+        chrono_start(&chrono);
     }
 
     // Generate expected results on rank 0 for verification purposes
-    int *expected_results = NULL;
-    if (rank == 0)
-    {
-        expected_results = (int *)malloc(nq * k * sizeof(int));
-        generate_expected_results(Q, nq, P, n, D, k, expected_results);
-    }
 
     /****************************** Distribuição de Q entre os processos ******************************/
     // Determina o número de pontos de Q que cada processo irá receber
@@ -226,16 +224,12 @@ int main(int argc, char *argv[])
  
     MPI_Bcast(P, n * sizeof(Point), MPI_BYTE, 0, MPI_COMM_WORLD);
 
-    knn(local_Q, local_nq, P, n, D, k, local_result_indices, rank);
+    knn(local_Q, local_nq, P, n, D, k, local_result_indices);
     /****************************** Execução do KNN no subconjunto de Q para cada processo *****************************/
 
     /****************************** Reunião dos resultados dos vizinhos mais próximos em rank 0 ******************************/
     // O processo com rank 0 precisa ter memória suficiente para receber todos os resultados
-    if (rank == 0)
-    {
-        result_indices = (int *)malloc(nq * k * sizeof(int));
-    }
-
+    
     // Reunião dos resultados dos vizinhos mais próximos em rank 0
     MPI_Gather(local_result_indices, local_nq * k, MPI_INT,
                result_indices, local_nq * k, MPI_INT,
@@ -245,37 +239,15 @@ int main(int argc, char *argv[])
     /****************************** Verificação dos Resultados ******************************/
 
     MPI_Barrier(MPI_COMM_WORLD);
-
+    #ifdef DEBUG 
     if (rank == 0)
     {
+        int *expected_results = NULL;
+
+        expected_results = (int *)malloc(nq * k * sizeof(int));
+        generate_expected_results(Q, nq, P, n, D, k, expected_results);
         // Array 'expected_results' com os índices esperados
-        // verify_results(result_indices, expected_results, nq * k);
-        #ifdef DEBUG 
-        // Imprimir os resultados gerados pelo KNN
-        printf("\nÍndices dos vizinhos mais próximos calculados pelo KNN:\n");
-        for (int i = 0; i < nq; i++)
-        {
-            printf("Ponto de consulta %d: ", i);
-            for (int j = 0; j < k; j++)
-            {
-                printf("%d ", result_indices[i * k + j]);
-            }
-            printf("\n");
-        }
-
-        // Imprimir os resultados esperados pelo KNN
-        printf("\nÍndices dos vizinhos mais próximos esperados pelo KNN:\n");
-        for (int i = 0; i < nq; i++)
-        {
-            printf("Ponto de consulta %d: ", i);
-            for (int j = 0; j < k; j++)
-            {
-                printf("%d ", expected_results[i * k + j]);
-            }
-            printf("\n");
-        }
-        #endif
-
+       
         printf("\nMatriz P:\n");
         for (int i = 0; i < n; i++)
         {
@@ -322,6 +294,52 @@ int main(int argc, char *argv[])
         }
         printf("\n");
     }
+
+
+
+    if (rank == 0){
+        // Imprimir os resultados gerados pelo KNN
+        printf("\nÍndices dos vizinhos mais próximos calculados pelo KNN:\n");
+        for (int i = 0; i < nq; i++)
+        {
+            printf("Ponto de consulta %d: ", i);
+            for (int j = 0; j < k; j++)
+            {
+                printf("%d ", result_indices[i * k + j]);
+            }
+            printf("\n");
+        }
+
+        // Imprimir os resultados esperados pelo KNN
+        printf("\nÍndices dos vizinhos mais próximos esperados pelo KNN:\n");
+        for (int i = 0; i < nq; i++)
+        {
+            printf("Ponto de consulta %d: ", i);
+            for (int j = 0; j < k; j++)
+            {
+                printf("%d ", expected_results[i * k + j]);
+            }
+            printf("\n");
+        }
+
+        verify_results(result_indices, expected_results, nq * k);
+
+    }
+    #endif
+
+    if(rank == 0){
+      chrono_stop(&chrono);
+      chrono_reportTime(&chrono, "chrono");
+
+      // calcular e imprimir a VAZAO (nesse caso: numero de BYTES/s)
+      double total_time_in_seconds = (double)chrono_gettotal(&chrono) /
+         ((double)1000 * 1000 * 1000);
+    //   double total_time_in_micro = (double)chrono_gettotal(&chrono) / ((double)1000);
+      printf("total_time_in_seconds: %lf s\n", total_time_in_seconds);
+      double GFLOPS = (((double)nq*k*n) / ((double)total_time_in_seconds*1000*1000*1000));
+      printf("Throughput: %lf GFLOPS\n", GFLOPS*(size-1));
+    }
+
     /****************************** Verificação dos Resultados ******************************/
 
     /****************************** Finalização ******************************/
