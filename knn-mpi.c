@@ -5,10 +5,11 @@
 #include "mpi.h"
 #include "max-heap.h"
 
+#define MAX_POINTS 300
 // Definição da estrutura para um ponto com D dimensões
 typedef struct
 {
-    float coords[300]; // Número fixo de dimensões para simplificar
+    float coords[MAX_POINTS]; // Número fixo de dimensões para simplificar
 } Point;
 
 // Função para gerar pontos aleatórios
@@ -32,6 +33,7 @@ float euclidean_distance(const Point *a, const Point *b, int dimensions)
         float diff = a->coords[i] - b->coords[i];
         distance += diff * diff;
     }
+    
     return (distance);
 }
 
@@ -97,28 +99,30 @@ void generate_expected_results(Point *Q, int nq, Point *P, int n, int D, int k, 
 // Execução do KNN no subconjunto de Q para cada processo
 void knn(Point *local_Q, int local_nq, Point *P, int n, int D, int k, int *result_indices, int rank)
 {
-    int heapSize;
-    heapSize = 0;
+    pair_t buff[k];
+    pair_t neighbors[local_nq][k]; // VERIFICAR A ALOCACAO
+    
 
-    pair_t neighbors[local_nq*k][k]; // VERIFICAR A ALOCACAO
     int meuRank;
     MPI_Comm_rank(MPI_COMM_WORLD, &meuRank);
+    pair_t inputTuple; 
+    Point query_point;
 
     for (int i = 0; i < local_nq; i++)
     {
-        Point query_point = local_Q[i]; // pega a linha de Q
+        int heapSize = 0;
+        query_point = local_Q[i]; // pega a linha de Q
+
         // Calcula a distância de cada ponto em P até o ponto de consulta
         for (int j =  0; j < k; j++) // insere as K primeiras distancias euclideanas
         {
-            pair_t inputTuple; 
-
             inputTuple.val = j;
             inputTuple.key = euclidean_distance(&query_point, &P[j], D);
             insert( (pair_t *)neighbors[i], &heapSize, inputTuple );     // SEGFAULT AQUI
-            
         }
     }
 
+    int heapSize = k;
 
     for (int i = 0; i < local_nq; i++)
     {
@@ -136,13 +140,15 @@ void knn(Point *local_Q, int local_nq, Point *P, int n, int D, int k, int *resul
         }
     }
     // Armazena os índices dos k vizinhos mais próximos
-    for (int i = 0; i < local_nq; i++){
-        if (meuRank == 0)
-            printf("\n Para a linha: %d \n",i); 
-        for (int j =  0; j < k; j++) // insere as K primeiras distancias euclideanas
-            if (meuRank == 0)
-                printf("(%d,%d) =  %f %d \n", i,j,neighbors[i][j].key,neighbors[i][j].val ); 
-    }
+    // if (meuRank == 0){
+        // for (int i = 0; i < local_nq; i++)
+            // drawHeapTree( neighbors[i], heapSize , k );
+
+    //     for (int i = 0; i < local_nq; i++){
+    //             printf("\n Para a linha: %d \n",i); 
+    //             for (int j =  0; j < k; j++) // insere as K primeiras distancias euclideanas
+    //                 printf("(%d,%d) =  %f %d \n", i,j,neighbors[i][j].key,neighbors[i][j].val );
+    // }
     
 
 }
@@ -176,12 +182,13 @@ int main(int argc, char *argv[])
     int *result_indices = NULL; // Esta matriz armazenará os índices dos k vizinhos mais próximos
 
     // O processo com rank 0 gera os conjuntos de pontos P e Q
+    P = (Point *)malloc(n * sizeof(Point));
+    
     if (rank == 0)
     {
         // Alocação de memória
-        P = (Point *)malloc(n * sizeof(Point));
         Q = (Point *)malloc(nq * sizeof(Point));
-        local_Q = (Point *)malloc(nq * sizeof(Point)); // local_Q é todo Q no processo 0
+        // local_Q = (Point *)malloc(nq * sizeof(Point)); // local_Q é todo Q no processo 0
         result_indices = (int *)malloc(nq * k * sizeof(int));
 
         // Inicializa a semente do gerador de números aleatórios
@@ -189,7 +196,6 @@ int main(int argc, char *argv[])
         srand(42); // Fixed seed for reproducibility
         generate_random_points(P, n, D);
         generate_random_points(Q, nq, D);
-        // generate_random_points(local_Q, nq, D);
     }
 
     // Generate expected results on rank 0 for verification purposes
@@ -217,13 +223,7 @@ int main(int argc, char *argv[])
     /****************************** Distribuição de Q entre os processos ******************************/
 
     /****************************** Execução do KNN no subconjunto de Q para cada processo *****************************/
-    /* Se o conjunto P é grande, você pode querer enviar os dados de P
-    para cada processo de forma mais controlada. No entanto, para simplificar,
-    estamos assumindo que todo P é enviado para todos os processos. */
-    if (rank != 0)
-    {
-        P = (Point *)malloc(n * sizeof(Point));
-    }
+ 
     MPI_Bcast(P, n * sizeof(Point), MPI_BYTE, 0, MPI_COMM_WORLD);
 
     knn(local_Q, local_nq, P, n, D, k, local_result_indices, rank);
@@ -243,6 +243,9 @@ int main(int argc, char *argv[])
     /****************************** Reunião dos resultados dos vizinhos mais próximos em rank 0 ******************************/
 
     /****************************** Verificação dos Resultados ******************************/
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
     if (rank == 0)
     {
         // Array 'expected_results' com os índices esperados
@@ -305,8 +308,8 @@ int main(int argc, char *argv[])
     }
 
     sleep(1);
-    printf("\nMatriz local_Q do rank %d:\n", rank);
-    for (int i = 0; i < nq / 4; i++)
+    printf("\nMatriz local_Q do rank %d local nq: %d:\n", rank, local_nq);
+    for (int i = 0; i < nq / size; i++)
     {
         printf("Ponto %d: ", i);
         for (int j = 0; j < D; j++)
