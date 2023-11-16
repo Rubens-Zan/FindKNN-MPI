@@ -173,14 +173,6 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     chronometer_t chrono;
-    // Get the name of the processor
-    char processor_name[MPI_MAX_PROCESSOR_NAME];
-    int name_len;
-    MPI_Get_processor_name(processor_name, &name_len);
-
-    // Print node info
-    printf("Host %s has rank %d out of %d MPI processes\n",
-           processor_name, rank, size);
 
     Point *P = NULL;
     Point *Q = NULL;
@@ -237,6 +229,15 @@ int main(int argc, char *argv[])
 
     /****************************** Reunião dos resultados dos vizinhos mais próximos em rank 0 ******************************/
     // O processo com rank 0 precisa ter memória suficiente para receber todos os resultados
+
+     // Get the name of the processor
+    char processor_name[MPI_MAX_PROCESSOR_NAME];
+    int name_len;
+    MPI_Get_processor_name(processor_name, &name_len);
+
+    // Print node info
+    printf("Host %s has rank %d out of %d MPI processes\n",
+           processor_name, rank, size);
 
     // Reunião dos resultados dos vizinhos mais próximos em rank 0
     MPI_Gather(local_result_indices, local_nq * k, MPI_INT,
