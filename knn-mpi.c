@@ -34,7 +34,7 @@ float euclidean_distance(const Point *a, const Point *b, int dimensions)
         float diff = a->coords[i] - b->coords[i];
         distance += diff * diff;
     }
-    
+
     return (distance);
 }
 
@@ -53,12 +53,14 @@ void verify_results(int *computed_indices, int *expected_indices, int length)
     {
         int ok = 0;
 
-        for (int j = 0; j < length; j++){
+        for (int j = 0; j < length; j++)
+        {
             if (computed_indices[i] == expected_indices[j])
-                ok =1;
+                ok = 1;
         }
 
-        if (!ok){
+        if (!ok)
+        {
             incorrect_count++;
             // printf("Índice %d: calculado=%d, esperado=%d\n", i, computed_indices[i], expected_indices[i]);
         }
@@ -66,11 +68,11 @@ void verify_results(int *computed_indices, int *expected_indices, int length)
 
     if (incorrect_count == 0)
     {
-        printf("Todos os resultados estão corretos.\n");
+        printf("\n<<<Todos os resultados estão corretos.>>>\n");
     }
     else
     {
-        printf("%d discrepâncias encontradas.\n", incorrect_count);
+        printf("\n<<<%d discrepâncias encontradas.>>>\n", incorrect_count);
     }
 }
 
@@ -108,7 +110,7 @@ void generate_expected_results(Point *Q, int nq, Point *P, int n, int D, int k, 
 void knn(Point *local_Q, int local_nq, Point *P, int n, int D, int k, int *result_indices)
 {
     pair_t neighbors[local_nq][k]; // matriz com nq linhas e k colunas
-    pair_t inputTuple; 
+    pair_t inputTuple;
     Point query_point;
 
     // Em cada um dos buffers que esse processo MPI deve lidar
@@ -119,30 +121,30 @@ void knn(Point *local_Q, int local_nq, Point *P, int n, int D, int k, int *resul
         query_point = local_Q[i]; // pega a linha de Q
 
         // Calcula a distância de cada ponto em P até o ponto de consulta
-        for (int j =  0; j < k; j++) // insere as K primeiras distancias euclideanas
+        for (int j = 0; j < k; j++) // insere as K primeiras distancias euclideanas
         {
             inputTuple.val = j;
             inputTuple.key = euclidean_distance(&query_point, &P[j], D);
-            insert( (pair_t *)neighbors[i], &heapSize, inputTuple );     // SEGFAULT AQUI
+            insert((pair_t *)neighbors[i], &heapSize, inputTuple); // SEGFAULT AQUI
         }
     }
 
     int heapSize = k;
 
-    // aplica decreaseMax para o restante dos elementos da matriz 
+    // aplica decreaseMax para o restante dos elementos da matriz
     for (int i = 0; i < local_nq; i++)
     {
         Point query_point = local_Q[i];
 
         // Calcula a distância de cada ponto em P até o ponto de consulta
-        for (int j =  k; j < n; j++)
+        for (int j = k; j < n; j++)
         {
-            pair_t inputTuple; 
+            pair_t inputTuple;
 
             inputTuple.val = j;
             inputTuple.key = euclidean_distance(&query_point, &P[j], D);
 
-            decreaseMax((pair_t *)neighbors[i], heapSize, inputTuple); 
+            decreaseMax((pair_t *)neighbors[i], heapSize, inputTuple);
         }
     }
 
@@ -150,26 +152,22 @@ void knn(Point *local_Q, int local_nq, Point *P, int n, int D, int k, int *resul
     for (int i = 0; i < local_nq; i++)
         for (int m = 0; m < k; m++)
             result_indices[i * k + m] = neighbors[i][m].val;
-
 }
 
 int main(int argc, char *argv[])
 {
     int rank, size;
-    int nq = 8; // Total de pontos em Q
-    int n = 20; // Total de pontos em P
-    int D = 10; // Número de dimensões dos pontos
-    int k = 5;  // Número de vizinhos mais próximos
-    
-    if (argc != 5){
+
+    if (argc != 5)
+    {
         printf("Expected: mpirun -np 4 knn-mpi <nq> <npp> <d> <k> %d \n", argc);
-        exit(1); 
+        exit(1);
     }
 
-    nq = atoi(argv[1]);
-    n  = atoi(argv[2]);
-    D = atoi(argv[3]);
-    k = atoi(argv[4]);
+    int nq = atoi(argv[1]); // Total de pontos em Q
+    int n = atoi(argv[2]);  // Total de pontos em P
+    int D = atoi(argv[3]);  // Número de dimensões dos pontos
+    int k = atoi(argv[4]);  // Número de vizinhos mais próximos
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -184,7 +182,7 @@ int main(int argc, char *argv[])
 
     // O processo com rank 0 gera os conjuntos de pontos P e Q
     P = (Point *)malloc(n * sizeof(Point));
-    
+
     if (rank == 0)
     {
         // Alocação de memória
@@ -197,7 +195,7 @@ int main(int argc, char *argv[])
         srand(42); // Fixed seed for reproducibility
         generate_random_points(P, n, D);
         generate_random_points(Q, nq, D);
-        
+
         chrono_reset(&chrono);
         chrono_start(&chrono);
     }
@@ -221,7 +219,7 @@ int main(int argc, char *argv[])
     /****************************** Distribuição de Q entre os processos ******************************/
 
     /****************************** Execução do KNN no subconjunto de Q para cada processo *****************************/
- 
+
     MPI_Bcast(P, n * sizeof(Point), MPI_BYTE, 0, MPI_COMM_WORLD);
 
     knn(local_Q, local_nq, P, n, D, k, local_result_indices);
@@ -229,7 +227,7 @@ int main(int argc, char *argv[])
 
     /****************************** Reunião dos resultados dos vizinhos mais próximos em rank 0 ******************************/
     // O processo com rank 0 precisa ter memória suficiente para receber todos os resultados
-    
+
     // Reunião dos resultados dos vizinhos mais próximos em rank 0
     MPI_Gather(local_result_indices, local_nq * k, MPI_INT,
                result_indices, local_nq * k, MPI_INT,
@@ -239,15 +237,15 @@ int main(int argc, char *argv[])
     /****************************** Verificação dos Resultados ******************************/
 
     MPI_Barrier(MPI_COMM_WORLD);
-    #ifdef DEBUG 
+#ifdef DEBUG
+    int *expected_results = NULL;
     if (rank == 0)
     {
-        int *expected_results = NULL;
 
+        // Array 'expected_results' com os índices esperados
         expected_results = (int *)malloc(nq * k * sizeof(int));
         generate_expected_results(Q, nq, P, n, D, k, expected_results);
-        // Array 'expected_results' com os índices esperados
-       
+
         printf("\nMatriz P:\n");
         for (int i = 0; i < n; i++)
         {
@@ -295,9 +293,8 @@ int main(int argc, char *argv[])
         printf("\n");
     }
 
-
-
-    if (rank == 0){
+    if (rank == 0)
+    {
         // Imprimir os resultados gerados pelo KNN
         printf("\nÍndices dos vizinhos mais próximos calculados pelo KNN:\n");
         for (int i = 0; i < nq; i++)
@@ -323,21 +320,21 @@ int main(int argc, char *argv[])
         }
 
         verify_results(result_indices, expected_results, nq * k);
-
     }
-    #endif
+#endif
 
-    if(rank == 0){
-      chrono_stop(&chrono);
-      chrono_reportTime(&chrono, "chrono");
+    if (rank == 0)
+    {
+        chrono_stop(&chrono);
+        chrono_reportTime(&chrono, "chrono");
 
-      // calcular e imprimir a VAZAO (nesse caso: numero de BYTES/s)
-      double total_time_in_seconds = (double)chrono_gettotal(&chrono) /
-         ((double)1000 * 1000 * 1000);
-    //   double total_time_in_micro = (double)chrono_gettotal(&chrono) / ((double)1000);
-      printf("total_time_in_seconds: %lf s\n", total_time_in_seconds);
-      double GFLOPS = (((double)nq*k*n) / ((double)total_time_in_seconds*1000*1000*1000));
-      printf("Throughput: %lf GFLOPS\n", GFLOPS*(size-1));
+        // calcular e imprimir a VAZAO (nesse caso: numero de BYTES/s)
+        double total_time_in_seconds = (double)chrono_gettotal(&chrono) /
+                                       ((double)1000 * 1000 * 1000);
+        //   double total_time_in_micro = (double)chrono_gettotal(&chrono) / ((double)1000);
+        printf("total_time_in_seconds: %lf s\n", total_time_in_seconds);
+        double GFLOPS = (((double)nq * k * n) / ((double)total_time_in_seconds * 1000 * 1000 * 1000));
+        printf("Throughput: %lf GFLOPS\n", GFLOPS * (size - 1));
     }
 
     /****************************** Verificação dos Resultados ******************************/
