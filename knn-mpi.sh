@@ -6,6 +6,7 @@ nodes=$(sinfo | awk 'NR==2{print $4}')
 # Agora a variável $nodes tem o valor do campo NODES
 echo "Número de nós disponíveis: $nodes"
 
+rm slurm*
 make purge && make
 
 # Rodar o programa para APENAS 1 processo MPI e medir o tempo da computaçao de knn
