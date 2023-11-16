@@ -173,6 +173,14 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     chronometer_t chrono;
+    // Get the name of the processor
+    char processor_name[MPI_MAX_PROCESSOR_NAME];
+    int name_len;
+    MPI_Get_processor_name(processor_name, &name_len);
+
+    // Print node info
+    printf("Host %s has rank %d out of %d MPI processes\n",
+           processor_name, rank, comm_size);
 
     Point *P = NULL;
     Point *Q = NULL;
@@ -182,6 +190,8 @@ int main(int argc, char *argv[])
 
     // O processo com rank 0 gera os conjuntos de pontos P e Q
     P = (Point *)malloc(n * sizeof(Point));
+
+    
 
     if (rank == 0)
     {
