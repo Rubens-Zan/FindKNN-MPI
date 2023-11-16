@@ -9,10 +9,13 @@ echo "Número de nós disponíveis: $nodes"
 make purge && make
 
 # Rodar o programa para APENAS 1 processo MPI e medir o tempo da computaçao de knn
-sbatch --exclusive -N 1 mpirun -np 1 knn-mpi  128 400000 300 1024
+echo "Rodando sbatch --exclusive para 1 nodo..."
+sbatch --exclusive -N 1 knn-mpi-1.sh
 
 # Rodar o programa para 4 processos MPI no mesmo host e medir o tempo da computaçao de knn
-sbatch --exclusive -N 1 mpirun -np 4 knn-mpi  128 400000 300 1024
+echo "Rodando sbatch --exclusive para 1 nodo..."
+sbatch --exclusive -N 1 knn-mpi-2.sh
 
 # Rodar o programa para 4 processos MPI em hosts diferentes e medir o tempo da computaçao de knn
-sbatch --exclusive -N $nodes mpirun -np 4 knn-mpi  128 400000 300 1024
+echo "Rodando sbatch --exclusive para 6 nodos..."
+sbatch --exclusive -N $nodes knn-mpi-3.sh
