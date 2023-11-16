@@ -333,8 +333,10 @@ int main(int argc, char *argv[])
                                        ((double)1000 * 1000 * 1000);
         //   double total_time_in_micro = (double)chrono_gettotal(&chrono) / ((double)1000);
         printf("total_time_in_seconds: %lf s\n", total_time_in_seconds);
+#ifdef DEBUG
         double GFLOPS = (((double)nq * k * n) / ((double)total_time_in_seconds * 1000 * 1000 * 1000));
         printf("Throughput: %lf GFLOPS\n", GFLOPS * (size - 1));
+#endif
     }
 
     /****************************** Verificação dos Resultados ******************************/
