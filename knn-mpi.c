@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
 
     // Print node info
     printf("Host %s has rank %d out of %d MPI processes\n",
-           processor_name, rank, comm_size);
+           processor_name, rank, size);
 
     Point *P = NULL;
     Point *Q = NULL;
