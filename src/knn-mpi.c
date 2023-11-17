@@ -268,6 +268,9 @@ int main(int argc, char *argv[])
     int *expected_results = NULL;
     if (rank == 0)
     {
+        // Calcula e imprimi a VAZAO (nesse caso: numero de BYTES/s)
+        double total_time_in_seconds = (double)chrono_gettotal(&chrono) /
+                                       ((double)1000 * 1000 * 1000);
         double GFLOPS = (((double)nq * k * n) / ((double)total_time_in_seconds * 1000 * 1000 * 1000));
         printf("Throughput: %lf GFLOPS\n", GFLOPS * (size - 1));
 
