@@ -2,6 +2,6 @@ Executando knn-mpi para 2 processos
 Host wz15 has rank 0 out of 2 MPI processes
 Host wz17 has rank 1 out of 2 MPI processes
 
-chrono deltaT(ns): 18216980141 ns for 1 ops 
-        ==> each op takes 18216980141 ns
-total_time_in_seconds: 18.216980 s
+chrono deltaT(ns): 18220111695 ns for 1 ops 
+        ==> each op takes 18220111695 ns
+total_time_in_seconds: 18.220112 s

@@ -3,9 +3,9 @@ Host wz17 has rank 1 out of 6 MPI processes
 Host wz17 has rank 2 out of 6 MPI processes
 Host wz17 has rank 3 out of 6 MPI processes
 Host wz17 has rank 4 out of 6 MPI processes
-Host wz17 has rank 5 out of 6 MPI processes
 Host wz17 has rank 0 out of 6 MPI processes
+Host wz17 has rank 5 out of 6 MPI processes
 
-chrono deltaT(ns): 11801943477 ns for 1 ops 
-        ==> each op takes 11801943477 ns
-total_time_in_seconds: 11.801943 s
+chrono deltaT(ns): 12242228652 ns for 1 ops 
+        ==> each op takes 12242228652 ns
+total_time_in_seconds: 12.242229 s

@@ -6,6 +6,6 @@ Host wz16 has rank 4 out of 6 MPI processes
 Host wz10 has rank 0 out of 6 MPI processes
 Host wz17 has rank 5 out of 6 MPI processes
 
-chrono deltaT(ns): 10241035959 ns for 1 ops 
-        ==> each op takes 10241035959 ns
-total_time_in_seconds: 10.241036 s
+chrono deltaT(ns): 10437579947 ns for 1 ops 
+        ==> each op takes 10437579947 ns
+total_time_in_seconds: 10.437580 s

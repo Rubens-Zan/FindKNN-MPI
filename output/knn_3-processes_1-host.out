@@ -1,8 +1,8 @@
 Executando knn-mpi para 3 processos
 Host wz12 has rank 1 out of 3 MPI processes
-Host wz12 has rank 2 out of 3 MPI processes
 Host wz12 has rank 0 out of 3 MPI processes
+Host wz12 has rank 2 out of 3 MPI processes
 
-chrono deltaT(ns): 13155209402 ns for 1 ops 
-        ==> each op takes 13155209402 ns
-total_time_in_seconds: 13.155209 s
+chrono deltaT(ns): 13106327697 ns for 1 ops 
+        ==> each op takes 13106327697 ns
+total_time_in_seconds: 13.106328 s
