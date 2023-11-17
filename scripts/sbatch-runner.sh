@@ -26,7 +26,7 @@ if [ "$NUM_NODES" -le "$nodes" ]; then
     done
 
     # Loop desde 1 até $NUM_NODES
-    for (( nodo=1; nodo<=$NUM_NODES; nodo++ ))
+    for (( nodo=2; nodo<=$NUM_NODES; nodo++ ))
     do
      # Rodar o programa para n processos MPI em n hosts diferentes e medir o tempo da computação de knn
         echo "> Rodando sbatch --exclusive para $nodo nodo(s) com 1 processo por nodo:"
