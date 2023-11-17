@@ -32,18 +32,21 @@ if [ "$NUM_NODES" -le "$nodes" ]; then
     sbatch --exclusive -N 1 knn-mpi-runner.sh 1
     
     
-    # Loop desde 1 até o número de nodos especificado
+    # Loop desde 1 até $NUM_NODES
+    for (( process=1; process<=$NUM_NODES; process++ ))
+    do
+        # Rodar o programa para n processos MPI no mesmo host e medir o tempo da computação de knn
+        echo "> Rodando sbatch --exclusive para 1 nodo com $process processo(s):"
+        sbatch --exclusive -N 1 knn-mpi-runner.sh $process
+    done
+
+    # Loop desde 1 até $NUM_NODES
     for (( nodo=1; nodo<=$NUM_NODES; nodo++ ))
     do
-        # Rodar o programa para 4 processos MPI no mesmo host e medir o tempo da computação de knn
-        echo "> Rodando sbatch --exclusive para 1 nodo com $nodo processo(s):"
-        sbatch --exclusive -N 1 knn-mpi-runner.sh $nodo
-        
-        # Rodar o programa para 4 processos MPI em hosts diferentes e medir o tempo da computação de knn
+     # Rodar o programa para n processos MPI em n hosts diferentes e medir o tempo da computação de knn
         echo "> Rodando sbatch --exclusive para $nodo nodo(s) com 1 processo por nodo:"
         sbatch --nodes=$nodo --ntasks-per-node=1 --exclusive knn-mpi-runner.sh $nodo
     done
-    
     
     # # Rodar o programa para 4 processos MPI no mesmo host e medir o tempo da computaçao de knn
     # echo "> Rodando sbatch --exclusive para 1 nodo com $NUM_NODES processos:"
