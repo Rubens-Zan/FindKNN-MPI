@@ -218,17 +218,6 @@ int main(int argc, char *argv[])
     MPI_Scatter(Q, local_nq * sizeof(Point), MPI_BYTE,
                 local_Q, local_nq * sizeof(Point), MPI_BYTE,
                 0, MPI_COMM_WORLD);
-    /****************************** Distribuição de Q entre os processos ******************************/
-
-    /****************************** Execução do KNN no subconjunto de Q para cada processo *****************************/
-
-    MPI_Bcast(P, n * sizeof(Point), MPI_BYTE, 0, MPI_COMM_WORLD);
-
-    knn(local_Q, local_nq, P, n, D, k, local_result_indices);
-    /****************************** Execução do KNN no subconjunto de Q para cada processo *****************************/
-
-    /****************************** Reunião dos resultados dos vizinhos mais próximos em rank 0 ******************************/
-    // O processo com rank 0 precisa ter memória suficiente para receber todos os resultados
 
      // Get the name of the processor
     char processor_name[MPI_MAX_PROCESSOR_NAME];
@@ -238,7 +227,15 @@ int main(int argc, char *argv[])
     // Print node info
     printf("Host %s has rank %d out of %d MPI processes\n",
            processor_name, rank, size);
+    /****************************** Distribuição de Q entre os processos ******************************/
 
+    /****************************** Execução do KNN no subconjunto de Q para cada processo *****************************/
+    MPI_Bcast(P, n * sizeof(Point), MPI_BYTE, 0, MPI_COMM_WORLD);
+
+    knn(local_Q, local_nq, P, n, D, k, local_result_indices);
+    /****************************** Execução do KNN no subconjunto de Q para cada processo *****************************/
+
+    /****************************** Reunião dos resultados dos vizinhos mais próximos em rank 0 ******************************/
     // Reunião dos resultados dos vizinhos mais próximos em rank 0
     MPI_Gather(local_result_indices, local_nq * k, MPI_INT,
                result_indices, local_nq * k, MPI_INT,
