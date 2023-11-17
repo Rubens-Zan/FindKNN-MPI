@@ -19,4 +19,4 @@ sbatch --exclusive -N 1 knn-mpi-1.sh 4
 
 # Rodar o programa para 4 processos MPI em hosts diferentes e medir o tempo da computaçao de knn
 echo "Rodando sbatch --exclusive para 6 nodos..."
-sbatch --exclusive -N $nodes knn-mpi-1.sh $nodes
+sbatch --exclusive -N 4 knn-mpi-1.sh 4

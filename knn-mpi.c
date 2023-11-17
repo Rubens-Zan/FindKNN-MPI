@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
 
     if (argc != 5)
     {
-        printf("Expected: mpirun -np 4 knn-mpi <nq> <npp> <d> <k> %d \n", argc);
+        printf("Expected: mpirun -np <num_processos> knn-mpi <nq> <npp> <d> <k> %d \n", argc);
         exit(1);
     }
 
@@ -183,26 +183,23 @@ int main(int argc, char *argv[])
     // O processo com rank 0 gera os conjuntos de pontos P e Q
     P = (Point *)malloc(n * sizeof(Point));
 
-    
-
     if (rank == 0)
     {
         // Alocação de memória
         Q = (Point *)malloc(nq * sizeof(Point));
-        // local_Q = (Point *)malloc(nq * sizeof(Point)); // local_Q é todo Q no processo 0
         result_indices = (int *)malloc(nq * k * sizeof(int));
+        // local_Q é todo Q no processo 0
+        // local_Q = (Point *)malloc(nq * sizeof(Point));
 
         // Inicializa a semente do gerador de números aleatórios
-        // srand(time(NULL));
-        srand(42); // Fixed seed for reproducibility
+        srand(time(NULL));
+        // Gera pontos aleatórios
         generate_random_points(P, n, D);
         generate_random_points(Q, nq, D);
 
         chrono_reset(&chrono);
         chrono_start(&chrono);
     }
-
-    // Generate expected results on rank 0 for verification purposes
 
     /****************************** Distribuição de Q entre os processos ******************************/
     // Determina o número de pontos de Q que cada processo irá receber
@@ -215,40 +212,64 @@ int main(int argc, char *argv[])
     int *local_result_indices = (int *)malloc(local_nq * k * sizeof(int));
 
     // O processo com rank 0 distribui os pontos de Q para todos os processos
-    MPI_Scatter(Q, local_nq * sizeof(Point), MPI_BYTE,
-                local_Q, local_nq * sizeof(Point), MPI_BYTE,
-                0, MPI_COMM_WORLD);
+    MPI_Scatter(Q,
+                local_nq * sizeof(Point),
+                MPI_BYTE,
+                local_Q,
+                local_nq * sizeof(Point),
+                MPI_BYTE,
+                0,
+                MPI_COMM_WORLD);
 
-     // Get the name of the processor
-    char processor_name[MPI_MAX_PROCESSOR_NAME];
+    // Recebe o nome do processador
     int name_len;
+    char processor_name[MPI_MAX_PROCESSOR_NAME];
     MPI_Get_processor_name(processor_name, &name_len);
 
-    // Print node info
-    printf("Host %s has rank %d out of %d MPI processes\n",
-           processor_name, rank, size);
+    // Print informações do nodo
+    printf("Host %s has rank %d out of %d MPI processes\n", processor_name, rank, size);
     /****************************** Distribuição de Q entre os processos ******************************/
 
     /****************************** Execução do KNN no subconjunto de Q para cada processo *****************************/
-    MPI_Bcast(P, n * sizeof(Point), MPI_BYTE, 0, MPI_COMM_WORLD);
-
+    // Broadcast do conjunto de pontos P para todos os n processos
+    MPI_Bcast(P,
+              n * sizeof(Point),
+              MPI_BYTE,
+              0,
+              MPI_COMM_WORLD);
     knn(local_Q, local_nq, P, n, D, k, local_result_indices);
     /****************************** Execução do KNN no subconjunto de Q para cada processo *****************************/
 
     /****************************** Reunião dos resultados dos vizinhos mais próximos em rank 0 ******************************/
-    // Reunião dos resultados dos vizinhos mais próximos em rank 0
-    MPI_Gather(local_result_indices, local_nq * k, MPI_INT,
-               result_indices, local_nq * k, MPI_INT,
-               0, MPI_COMM_WORLD);
+    MPI_Gather(local_result_indices,
+               local_nq * k,
+               MPI_INT,
+               result_indices,
+               local_nq * k,
+               MPI_INT,
+               0,
+               MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
     /****************************** Reunião dos resultados dos vizinhos mais próximos em rank 0 ******************************/
 
     /****************************** Verificação dos Resultados ******************************/
+    if (rank == 0)
+    {
+        chrono_stop(&chrono);
+        chrono_reportTime(&chrono, "chrono");
 
-    MPI_Barrier(MPI_COMM_WORLD);
+        // Calcula e imprimi a VAZAO (nesse caso: numero de BYTES/s)
+        double total_time_in_seconds = (double)chrono_gettotal(&chrono) /
+                                       ((double)1000 * 1000 * 1000);
+        printf("total_time_in_seconds: %lf s\n", total_time_in_seconds);
+    }
 #ifdef DEBUG
+    // Generate expected results on rank 0 for verification purposes
     int *expected_results = NULL;
     if (rank == 0)
     {
+        double GFLOPS = (((double)nq * k * n) / ((double)total_time_in_seconds * 1000 * 1000 * 1000));
+        printf("Throughput: %lf GFLOPS\n", GFLOPS * (size - 1));
 
         // Array 'expected_results' com os índices esperados
         expected_results = (int *)malloc(nq * k * sizeof(int));
@@ -330,23 +351,6 @@ int main(int argc, char *argv[])
         verify_results(result_indices, expected_results, nq * k);
     }
 #endif
-
-    if (rank == 0)
-    {
-        chrono_stop(&chrono);
-        chrono_reportTime(&chrono, "chrono");
-
-        // calcular e imprimir a VAZAO (nesse caso: numero de BYTES/s)
-        double total_time_in_seconds = (double)chrono_gettotal(&chrono) /
-                                       ((double)1000 * 1000 * 1000);
-        //   double total_time_in_micro = (double)chrono_gettotal(&chrono) / ((double)1000);
-        printf("total_time_in_seconds: %lf s\n", total_time_in_seconds);
-#ifdef DEBUG
-        double GFLOPS = (((double)nq * k * n) / ((double)total_time_in_seconds * 1000 * 1000 * 1000));
-        printf("Throughput: %lf GFLOPS\n", GFLOPS * (size - 1));
-#endif
-    }
-
     /****************************** Verificação dos Resultados ******************************/
 
     /****************************** Finalização ******************************/
