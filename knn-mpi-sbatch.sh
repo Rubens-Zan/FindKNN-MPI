@@ -4,7 +4,7 @@
 nodes=$(sinfo | awk 'NR==2{print $4}')
 
 # Agora a variável $nodes tem o valor do campo NODES
-echo "Número de nós disponíveis: $nodes"
+echo "> Número de nós disponíveis: $nodes"
 
 # Recebe número de processos desejado
 NUM_NODES=$1
