@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.ejs": "html",
+        "max-heap.h": "c",
+        "mpi.h": "c"
+    }
+}

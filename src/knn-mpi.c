@@ -3,8 +3,8 @@
 #include <unistd.h>
 #include <time.h>
 #include "mpi.h"
-#include "max-heap.h"
-#include "chrono.h"
+#include "../include/max-heap.h"
+#include "../include/chrono.h"
 
 #define MAX_POINTS 300
 // Definição da estrutura para um ponto com D dimensões
