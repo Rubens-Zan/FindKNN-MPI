@@ -7,7 +7,7 @@ nodes=$(sinfo | awk 'NR==2{print $4}')
 echo "> Número de nós disponíveis: $nodes"
 
 # Recebe número de processos desejado
-read -p "> Digite o número de nós desejados para executar:" NUM_NODES
+read -p "> Digite o número de nós desejados para executar: " NUM_NODES
 
 # Verifica se NUM_NODES é maior do que nodes
 if [ "$NUM_NODES" -le "$nodes" ]; then
