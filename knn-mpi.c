@@ -8,6 +8,7 @@
 
 #define MAX_POINTS 300
 // Definição da estrutura para um ponto com D dimensões
+
 typedef struct
 {
     float coords[MAX_POINTS]; // Número fixo de dimensões para simplificar
@@ -62,7 +63,6 @@ void verify_results(int *computed_indices, int *expected_indices, int length)
         if (!ok)
         {
             incorrect_count++;
-            // printf("Índice %d: calculado=%d, esperado=%d\n", i, computed_indices[i], expected_indices[i]);
         }
     }
 
