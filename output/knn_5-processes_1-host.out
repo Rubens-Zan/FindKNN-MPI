@@ -1,0 +1,10 @@
+Executando knn-mpi para 5 processos
+Host wz16 has rank 1 out of 5 MPI processes
+Host wz16 has rank 2 out of 5 MPI processes
+Host wz16 has rank 3 out of 5 MPI processes
+Host wz16 has rank 4 out of 5 MPI processes
+Host wz16 has rank 0 out of 5 MPI processes
+
+chrono deltaT(ns): 12425737749 ns for 1 ops 
+        ==> each op takes 12425737749 ns
+total_time_in_seconds: 12.425738 s

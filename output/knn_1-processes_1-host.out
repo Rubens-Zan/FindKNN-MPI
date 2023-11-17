@@ -1,0 +1,6 @@
+Executando knn-mpi para 1 processos
+Host wz10 has rank 0 out of 1 MPI processes
+
+chrono deltaT(ns): 25600716544 ns for 1 ops 
+        ==> each op takes 25600716544 ns
+total_time_in_seconds: 25.600717 s
