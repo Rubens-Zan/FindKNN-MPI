@@ -37,10 +37,10 @@ debug : all
 
 # Regra para limpar os arquivos compilados
 clean:
-	rm -f $(EXECUTABLE) *.out
+	rm -f $(EXECUTABLE) 
 
 purge:
-	rm -f $(EXECUTABLE) *.out
+	rm -f $(EXECUTABLE) 
 
 # Evita conflito com arquivos de mesmo nome que as regras
 .PHONY: all clean purge
