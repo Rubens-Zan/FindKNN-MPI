@@ -14,11 +14,11 @@ if [ "$NUM_NODES" -le "$nodes" ]; then
     echo "> Número de processos solicitado ($NUM_NODES) está dentro do limite de nós disponíveis ($nodes). Prosseguindo..."
     
     # Verifica se existem arquivos com padrão slurm* no diretório atual
-    if ls slurm* 1> /dev/null 2>&1; then
-        echo "> Removendo arquivos slurm antigos."
-        rm slurm*
+    if ls *.out 1> /dev/null 2>&1; then
+        echo "> Removendo arquivos .out antigos."
+        rm *.out
     else
-        echo "> Nenhum arquivo slurm antigo para remover. Prosseguindo...."
+        echo "> Nenhum arquivo .out antigo para remover. Prosseguindo...."
     fi
     
     # Recompila arquivos de execução
