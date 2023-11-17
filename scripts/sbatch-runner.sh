@@ -12,7 +12,7 @@ if [ "$NUM_NODES" -le "$nodes" ]; then
     echo "> Número de processos solicitado ($NUM_NODES) está dentro do limite de nós disponíveis ($nodes). Prosseguindo..."
     
     # Recompila arquivos de execução
-    echo "> Removendo antigos arquivos de compilaçãoe output:"
+    echo "> Removendo antigos arquivos de compilação e output:"
     make purge
     echo "> Compilando arquivos para execução:"
     make
