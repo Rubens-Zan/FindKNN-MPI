@@ -22,7 +22,7 @@ if [ "$NUM_NODES" -le "$nodes" ]; then
     do
         # Rodar o programa para n processos MPI no mesmo host e medir o tempo da computação de knn
         echo "> Rodando sbatch --exclusive para 1 nodo com $process processo(s):"
-        sbatch --output=knn_$process-processes_1-host.out --exclusive -N 1 ./scripts/knn-mpi-runner.sh $process
+        sbatch --output=./output/knn_$process-processes_1-host.out --exclusive -N 1 ./scripts/knn-mpi-runner.sh $process
     done
 
     # Loop desde 1 até $NUM_NODES
@@ -30,7 +30,7 @@ if [ "$NUM_NODES" -le "$nodes" ]; then
     do
      # Rodar o programa para n processos MPI em n hosts diferentes e medir o tempo da computação de knn
         echo "> Rodando sbatch --exclusive para $nodo nodo(s) com 1 processo por nodo:"
-        sbatch --output=knn_$nodo-processes_$nodo-hosts.out --nodes=$nodo --ntasks-per-node=1 --exclusive ./scripts/knn-mpi-runner.sh $nodo
+        sbatch --output=./output/knn_$nodo-processes_$nodo-hosts.out --nodes=$nodo --ntasks-per-node=1 --exclusive ./scripts/knn-mpi-runner.sh $nodo
     done
 else
     echo "ERROR ==> O número de processos solicitado ($NUM_NODES) é maior do que o número de nós disponíveis ($nodes)."
