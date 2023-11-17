@@ -7,22 +7,14 @@ nodes=$(sinfo | awk 'NR==2{print $4}')
 echo "> Número de nós disponíveis: $nodes"
 
 # Recebe número de processos desejado
-NUM_NODES=$1
+read -p "> Digite o número de nós desejados para executar:" NUM_NODES
 
 # Verifica se NUM_NODES é maior do que nodes
 if [ "$NUM_NODES" -le "$nodes" ]; then
     echo "> Número de processos solicitado ($NUM_NODES) está dentro do limite de nós disponíveis ($nodes). Prosseguindo..."
     
-    # Verifica se existem arquivos com padrão slurm* no diretório atual
-    if ls *.out 1> /dev/null 2>&1; then
-        echo "> Removendo arquivos .out antigos."
-        rm *.out
-    else
-        echo "> Nenhum arquivo .out antigo para remover. Prosseguindo...."
-    fi
-    
     # Recompila arquivos de execução
-    echo "> Removendo antigos arquivos de compilação:"
+    echo "> Removendo antigos arquivos de compilaçãoe output:"
     make purge
     echo "> Compilando arquivos para execução:"
     make
@@ -43,6 +35,6 @@ if [ "$NUM_NODES" -le "$nodes" ]; then
         sbatch --output=knn_$nodo-processes_$nodo-hosts.out --nodes=$nodo --ntasks-per-node=1 --exclusive knn-mpi-runner.sh $nodo
     done
 else
-    echo "ERROR: O número de processos solicitado ($NUM_NODES) é maior do que o número de nós disponíveis ($nodes)."
+    echo "ERROR ==> O número de processos solicitado ($NUM_NODES) é maior do que o número de nós disponíveis ($nodes)."
     make purge
 fi
