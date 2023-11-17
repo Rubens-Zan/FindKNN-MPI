@@ -31,7 +31,7 @@ debug : all
 
 # Regra para limpar os arquivos compilados
 clean:
-	rm -f $(EXECUTABLE) $(OBJECTS)
+	rm -f $(EXECUTABLE) $(OBJECTS) *.out
 
 purge:
 	rm -f $(EXECUTABLE) $(OBJECTS)
