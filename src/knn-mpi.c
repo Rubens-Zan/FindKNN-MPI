@@ -125,7 +125,7 @@ void knn(Point *local_Q, int local_nq, Point *P, int n, int D, int k, int *resul
         {
             inputTuple.val = j;
             inputTuple.key = euclidean_distance(&query_point, &P[j], D);
-            insert((pair_t *)neighbors[i], &heapSize, inputTuple); // SEGFAULT AQUI
+            insert((pair_t *)neighbors[i], &heapSize, inputTuple); 
         }
     }
 
