@@ -1,4 +1,6 @@
 # Determinar conjuntos de K vizinhos mais próximos (KNN) com processos MPI
+O relatório do projeto em versão PDF se encontra no path docs/Relatorio.pdf 
+
 ## Integrantes
 * Rubens Zandomenighi Laszlo GRR20206147
 * Gabriel Razzolini Pires De Paula GRR20197155
@@ -35,8 +37,21 @@ Para a melhor visualização dos resultado, além das experiências especificas,
 - sbatch-runner.sh: Script que executa sbatch $NUM_NODOS. 
 
 ## Resultados obtidos
+- As experiências foram executadas no cluster XEON e os hosts utilizados para as experiências estão descritos nos outputs, conforme a experiência executada, sendo esse com 6 hosts disponíveis para as experiências desse projeto. 
 - Outputs: Os outputs gerados pelo programa foram salvos na pasta output no padrão knn_$NUM_PROCESS-processes_$NUM_HOSTS-host.out. 
 - Além das experiências especificadas, efetuamos experiências para geração do seguindo gráfico, que ilustra os resultados obtidos conforme o aumento de números de hosts, como também pelo aumento de processos MPI executados. 
 - Conforme as experiências, verificamos o aumento contínuo de speed up, comparando os resultados obtidos conforme o aumento de Hosts, visto que cada host trata de um conjunto de pontos locais através da função **Scatter**, e somente após a execução de knn para esses conjuntos locais, utilizamos a função **Gather** para juntar os resultados obtidos em um conjunto 'global' de índices obtidos.
 
-![Gráfico Speed Up por processos](grafico-speed-up-img.png)
+![Gráfico Speed Up por processos](docs/grafico-speed-up-img.png)
+
+- O resultado para as três experiências especificadas, além das experiências explicadas acimas, estão disponíveis no path docs/Planilha-resultados. 
+- Medimos os resultados conforme a entrada especificada de 1.024 vizinhos mais próximos de 128 pontos de 300 dimensoes em base de dados de 400.000 pontos, relatando abaixando o speed up de cada experiência.
+
+### Experiencia 1: Tempo da computação 1 processo MPI
+- Tempo base: 25,597040 ns 
+### Experiencia 2: Tempo da computação de 4 processos MPI no mesmo host
+- Speed up: 2,20 ns
+### Experiencia 3: Tempo da computaçao 4 processos MPI em hosts diferentes
+- Speed up: 2,17 ns
+### Experiência 4: Speed up conforme aumento de processos MPI e aumento de hosts
+- Conforme o aumento do número de processos obtivemos em média 2,06 ns de speed up conforme o aumento de processos MPI. 
