@@ -1,5 +1,6 @@
 # Determinar conjuntos de K vizinhos mais próximos (KNN) com processos MPI
-O relatório do projeto em versão PDF se encontra no path docs/Relatorio.pdf 
+- O relatório do projeto em versão PDF se encontra no path docs/Relatorio.pdf 
+- Para executar o programa, basta digitar o comando ```source scripts/sbatch-runner.sh ``` e digitar a quantidade de processos MPI desejadas para o teste. 
 
 ## Integrantes
 * Rubens Zandomenighi Laszlo GRR20206147
