@@ -49,10 +49,10 @@ Para a melhor visualização dos resultado, além das experiências especificas,
 - Medimos os resultados conforme a entrada especificada de 1.024 vizinhos mais próximos de 128 pontos de 300 dimensoes em base de dados de 400.000 pontos, relatando abaixando o speed up de cada experiência.
 
 ### Experiencia 1: Tempo da computação 1 processo MPI
-- Tempo base: 25,597040 ns 
+- Tempo base: 25,597040 s
 ### Experiencia 2: Tempo da computação de 4 processos MPI no mesmo host
-- Speed up: 2,20 ns
+- Speed up com relação ao tempo base(sequencial): 2,20
 ### Experiencia 3: Tempo da computaçao 4 processos MPI em hosts diferentes
-- Speed up: 2,17 ns
+- Speed up com relação ao tempo base(sequencial): 2,17
 ### Experiência 4: Speed up conforme aumento de processos MPI e aumento de hosts
-- Conforme o aumento do número de processos obtivemos em média 2,06 ns de speed up conforme o aumento de processos MPI. 
+- Conforme o aumento do número de processos obtivemos em média 2,06 de speed up conforme o aumento de processos MPI. 
