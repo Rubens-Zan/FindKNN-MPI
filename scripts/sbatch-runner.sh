@@ -12,10 +12,10 @@ if [ "$NUM_NODES" -le "$nodes" ]; then
     echo "> Número de processos solicitado ($NUM_NODES) está dentro do limite de nós disponíveis ($nodes). Prosseguindo..."
     
     # Recompila arquivos de execução
-    echo "> Removendo antigos arquivos:"
-    make purge
-    echo "> Compilando arquivos para execução:"
-    make
+    # echo "> Removendo antigos arquivos:"
+    # make purge
+    #echo "> Compilando arquivos para execução:"
+    # make
     
     echo
     # Loop desde 1 até $NUM_NODES
@@ -23,7 +23,7 @@ if [ "$NUM_NODES" -le "$nodes" ]; then
     do
         # Rodar o programa para n processos MPI no mesmo host e medir o tempo da computação de knn
         echo "> Rodando sbatch --exclusive para 1 nodo com $process processo(s):"
-        sbatch --output=./output/knn_$process-processes_1-host.out --exclusive -N 1 ./scripts/knn-mpi-runner.sh $process
+        sbatch --output=../output/knn_$process-processes_1-host.out --exclusive -N 1 knn-mpi-runner.sh $process
     done
 
     # Loop desde 1 até $NUM_NODES
@@ -31,9 +31,9 @@ if [ "$NUM_NODES" -le "$nodes" ]; then
     do
      # Rodar o programa para n processos MPI em n hosts diferentes e medir o tempo da computação de knn
         echo "> Rodando sbatch --exclusive para $nodo nodo(s) com 1 processo por nodo:"
-        sbatch --output=./output/knn_$nodo-processes_$nodo-hosts.out --nodes=$nodo --ntasks-per-node=1 --exclusive ./scripts/knn-mpi-runner.sh $nodo
+        sbatch --output=../output/knn_$nodo-processes_$nodo-hosts.out --nodes=$nodo --ntasks-per-node=1 --exclusive knn-mpi-runner.sh $nodo
     done
 else
     echo "ERROR ==> O número de processos solicitado ($NUM_NODES) é maior do que o número de nós disponíveis ($nodes)."
-    make purge
+    #make purge
 fi
